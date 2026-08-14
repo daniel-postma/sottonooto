@@ -1,0 +1,1274 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Japanese Song Notebook</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --paper: #fffaf4;
+        --ink: #29222a;
+        --muted: #756b73;
+        --accent: #a43f5d;
+        --accent-dark: #7d2946;
+        --line: #eadde1;
+        --soft: #f8e9ed;
+        --shadow: 0 18px 50px rgba(89, 48, 62, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 10% 0%, #f9dfe7 0, transparent 32rem),
+          linear-gradient(135deg, #fffaf4, #f8f0ee);
+      }
+
+      main {
+        width: min(920px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 48px 0 80px;
+      }
+
+      header {
+        margin-bottom: 24px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-family: Georgia, "Yu Mincho", serif;
+        font-size: clamp(2rem, 6vw, 3.5rem);
+        letter-spacing: -0.04em;
+      }
+
+      header p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .panel {
+        padding: clamp(18px, 4vw, 30px);
+        border: 1px solid rgba(164, 63, 93, 0.12);
+        border-radius: 24px;
+        background: rgba(255, 250, 244, 0.88);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 750;
+      }
+
+      textarea,
+      input,
+      select {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        color: var(--ink);
+        background: #fff;
+        font: inherit;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+
+      textarea:focus,
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px rgba(164, 63, 93, 0.12);
+      }
+
+      #songTitle {
+        margin-bottom: 16px;
+        padding: 12px 14px;
+        font-weight: 700;
+      }
+
+      .song-library {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 10px;
+        align-items: end;
+        margin-bottom: 22px;
+        padding-bottom: 22px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .song-picker label {
+        margin-bottom: 8px;
+      }
+
+      #songSelect {
+        min-height: 46px;
+        padding: 11px 42px 11px 14px;
+        cursor: pointer;
+      }
+
+      .backup-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: -8px 0 22px;
+      }
+
+      #importFile {
+        display: none;
+      }
+
+      #lyricsInput {
+        min-height: 210px;
+        padding: 16px;
+        resize: vertical;
+        line-height: 1.7;
+        font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif;
+      }
+
+      .youtube-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      #youtubeUrl {
+        padding: 12px 14px;
+      }
+
+      .floating-player {
+        position: fixed;
+        z-index: 20;
+        top: 24px;
+        right: 24px;
+        width: min(360px, calc(100vw - 32px));
+        overflow: hidden;
+        border: 1px solid rgba(164, 63, 93, 0.22);
+        border-radius: 18px;
+        background: #1d171c;
+        box-shadow: 0 18px 55px rgba(37, 19, 27, 0.3);
+        transform: translateX(0);
+        transition: transform 0.25s ease;
+      }
+
+      .floating-player.hidden {
+        transform: translateX(calc(100% + 28px));
+      }
+
+      .player-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 10px 9px 14px;
+        color: #fff;
+        background: #31242c;
+      }
+
+      .player-bar strong {
+        overflow: hidden;
+        flex: 1;
+        font-size: 0.86rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .player-bar button,
+      .show-player {
+        padding: 6px 11px;
+        font-size: 0.78rem;
+      }
+
+      .player-frame {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background: #000;
+      }
+
+      .player-frame iframe {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+
+      .show-player {
+        position: fixed;
+        z-index: 21;
+        top: 24px;
+        right: 18px;
+        display: none;
+        box-shadow: var(--shadow);
+      }
+
+      .show-player.visible {
+        display: block;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 11px 18px;
+        color: #fff;
+        background: var(--accent);
+        font: inherit;
+        font-weight: 750;
+        cursor: pointer;
+        transition:
+          transform 0.15s,
+          background 0.15s;
+      }
+
+      button:hover {
+        background: var(--accent-dark);
+        transform: translateY(-1px);
+      }
+      button:active {
+        transform: translateY(0);
+      }
+
+      button.secondary {
+        color: var(--accent-dark);
+        background: var(--soft);
+      }
+
+      button.secondary:hover {
+        background: #f2d8e0;
+      }
+
+      button.danger {
+        color: #8a283e;
+        background: transparent;
+        border: 1px solid #e9bdc8;
+      }
+
+      .workspace {
+        display: none;
+        margin-top: 26px;
+      }
+      .workspace.visible {
+        display: block;
+      }
+
+      .workspace-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 14px;
+      }
+
+      #displayTitle {
+        margin: 0;
+        font-family: Georgia, "Yu Mincho", serif;
+        font-size: 1.5rem;
+      }
+
+      #lineCount {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      #lineCards {
+        display: grid;
+        gap: 12px;
+      }
+
+      details {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 8px 22px rgba(89, 48, 62, 0.06);
+      }
+
+      summary {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        padding: 17px 20px;
+        list-style: none;
+        cursor: pointer;
+      }
+
+      summary::-webkit-details-marker {
+        display: none;
+      }
+
+      summary::after {
+        content: "＋";
+        margin-left: auto;
+        color: var(--accent);
+        font-size: 1.2rem;
+        font-weight: 700;
+      }
+
+      details[open] summary::after {
+        content: "−";
+      }
+
+      .number {
+        min-width: 2ch;
+        color: var(--accent);
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+
+      .lyric {
+        font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif;
+        font-size: 1.08rem;
+        line-height: 1.55;
+      }
+
+      .note-wrap {
+        padding: 0 20px 20px 48px;
+        border-top: 1px dashed var(--line);
+      }
+
+      .note-wrap label {
+        margin-top: 15px;
+        color: var(--muted);
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .note {
+        min-height: 120px;
+        padding: 14px;
+        resize: vertical;
+        line-height: 1.55;
+      }
+
+      .saved {
+        min-height: 1.2em;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.8rem;
+        text-align: right;
+      }
+
+      .recording-section {
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px dashed var(--line);
+      }
+
+      .recording-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+
+      .recording-heading strong {
+        font-size: 0.92rem;
+      }
+
+      .recording-status {
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .recording-status.active {
+        color: #b42342;
+        font-weight: 750;
+      }
+
+      .recording-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 9px;
+      }
+
+      .recording-actions button {
+        padding: 9px 14px;
+        font-size: 0.88rem;
+      }
+
+      .recording-actions audio {
+        width: min(100%, 330px);
+        height: 38px;
+      }
+
+      button.recording {
+        background: #b42342;
+        animation: pulse 1.4s infinite;
+      }
+
+      @keyframes pulse {
+        50% {
+          box-shadow: 0 0 0 7px rgba(180, 35, 66, 0.12);
+        }
+      }
+
+      @media (max-width: 600px) {
+        main {
+          width: min(100% - 20px, 920px);
+          padding-top: 26px;
+        }
+        .workspace-bar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+        .note-wrap {
+          padding-left: 20px;
+        }
+        button {
+          flex: 1 1 auto;
+        }
+        .youtube-row {
+          grid-template-columns: 1fr;
+        }
+        .song-library {
+          grid-template-columns: 1fr 1fr;
+        }
+        .song-picker {
+          grid-column: 1 / -1;
+        }
+        .floating-player {
+          top: auto;
+          right: 10px;
+          bottom: 10px;
+          width: min(340px, calc(100vw - 20px));
+        }
+        .floating-player.hidden {
+          transform: translateY(calc(100% + 18px));
+        }
+        .show-player {
+          top: auto;
+          right: 10px;
+          bottom: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>歌のノート</h1>
+        <p>Paste a Japanese song, then build your own line-by-line lesson.</p>
+      </header>
+
+      <section class="panel">
+        <div class="song-library">
+          <div class="song-picker">
+            <label for="songSelect">Your songs</label>
+            <select id="songSelect" aria-label="Choose a song"></select>
+          </div>
+          <button id="newSongButton" class="secondary" type="button">
+            ＋ Add song
+          </button>
+          <button id="deleteSongButton" class="danger" type="button">
+            Delete song
+          </button>
+        </div>
+
+        <div class="backup-actions">
+          <button id="exportButton" class="secondary" type="button">
+            Export data
+          </button>
+          <button id="importButton" class="secondary" type="button">
+            Load save data
+          </button>
+          <input id="importFile" type="file" accept="application/json,.json" />
+        </div>
+
+        <label for="songTitle">Song title (optional)</label>
+        <input id="songTitle" type="text" placeholder="例：エルフ" />
+
+        <label for="lyricsInput">Japanese lyrics</label>
+        <textarea
+          id="lyricsInput"
+          placeholder="Paste the lyrics here—one lyric per line."
+        ></textarea>
+
+        <div class="youtube-row">
+          <input
+            id="youtubeUrl"
+            type="url"
+            inputmode="url"
+            placeholder="Paste a YouTube song URL"
+            aria-label="YouTube song URL"
+          />
+          <button id="loadVideoButton" class="secondary" type="button">
+            Load video
+          </button>
+        </div>
+
+        <div class="actions">
+          <button id="createButton" type="button">Create note sections</button>
+          <button id="expandButton" class="secondary" type="button">
+            Expand all notes
+          </button>
+          <button id="collapseButton" class="secondary" type="button">
+            Collapse all notes
+          </button>
+          <button id="clearButton" class="danger" type="button">
+            Clear everything
+          </button>
+        </div>
+      </section>
+
+      <section id="workspace" class="workspace" aria-live="polite">
+        <div class="workspace-bar">
+          <div>
+            <h2 id="displayTitle">My song notes</h2>
+            <span id="lineCount"></span>
+          </div>
+        </div>
+        <div id="lineCards"></div>
+      </section>
+    </main>
+
+    <aside id="floatingPlayer" class="floating-player" hidden>
+      <div class="player-bar">
+        <strong>YouTube practice player</strong>
+        <button id="hidePlayerButton" class="secondary" type="button">
+          Hide
+        </button>
+      </div>
+      <div class="player-frame">
+        <iframe
+          id="youtubePlayer"
+          title="YouTube song player"
+          allow="
+            accelerometer;
+            autoplay;
+            clipboard-write;
+            encrypted-media;
+            gyroscope;
+            picture-in-picture;
+            web-share;
+          "
+          allowfullscreen
+        ></iframe>
+      </div>
+    </aside>
+    <button id="showPlayerButton" class="show-player" type="button">
+      Show video
+    </button>
+
+    <script>
+      const STORAGE_KEY = "japanese-song-notebook-v2";
+      const LEGACY_STORAGE_KEY = "japanese-song-notebook-v1";
+      const AUDIO_DB = "japanese-song-notebook-audio";
+      const AUDIO_STORE = "recordings";
+      const titleInput = document.querySelector("#songTitle");
+      const lyricsInput = document.querySelector("#lyricsInput");
+      const workspace = document.querySelector("#workspace");
+      const lineCards = document.querySelector("#lineCards");
+      const displayTitle = document.querySelector("#displayTitle");
+      const lineCount = document.querySelector("#lineCount");
+      const youtubeUrlInput = document.querySelector("#youtubeUrl");
+      const floatingPlayer = document.querySelector("#floatingPlayer");
+      const youtubePlayer = document.querySelector("#youtubePlayer");
+      const showPlayerButton = document.querySelector("#showPlayerButton");
+      const songSelect = document.querySelector("#songSelect");
+      const importFile = document.querySelector("#importFile");
+
+      const blankSong = () => ({
+        id: crypto.randomUUID?.() || `song-${Date.now()}-${Math.random()}`,
+        title: "",
+        lines: [],
+        notes: [],
+        youtubeUrl: "",
+      });
+      let library = { activeSongId: "", songs: [] };
+      let song = blankSong();
+      let saveTimer;
+      let activeRecorder = null;
+      let activeStream = null;
+
+      function openAudioDb() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(AUDIO_DB, 1);
+          request.onupgradeneeded = () => {
+            if (!request.result.objectStoreNames.contains(AUDIO_STORE)) {
+              request.result.createObjectStore(AUDIO_STORE);
+            }
+          };
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      function audioKey(index) {
+        if (song.legacyAudioKeys) {
+          return `${song.title}\u241f${song.lines[index]}\u241f${index}`;
+        }
+        return `${song.id}\u241f${song.lines[index]}\u241f${index}`;
+      }
+
+      async function getRecording(key) {
+        const db = await openAudioDb();
+        return new Promise((resolve, reject) => {
+          const request = db
+            .transaction(AUDIO_STORE, "readonly")
+            .objectStore(AUDIO_STORE)
+            .get(key);
+          request.onsuccess = () => resolve(request.result || null);
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function putRecording(key, value) {
+        const db = await openAudioDb();
+        return new Promise((resolve, reject) => {
+          const request = db
+            .transaction(AUDIO_STORE, "readwrite")
+            .objectStore(AUDIO_STORE)
+            .put(value, key);
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function deleteRecording(key) {
+        const db = await openAudioDb();
+        return new Promise((resolve, reject) => {
+          const request = db
+            .transaction(AUDIO_STORE, "readwrite")
+            .objectStore(AUDIO_STORE)
+            .delete(key);
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      function stopActiveRecording() {
+        if (activeRecorder?.state === "recording") activeRecorder.stop();
+      }
+
+      function saveSong(showStatus = false) {
+        const position = library.songs.findIndex((item) => item.id === song.id);
+        if (position === -1) library.songs.push(song);
+        else library.songs[position] = song;
+        library.activeSongId = song.id;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
+        if (showStatus) {
+          document.querySelectorAll(".saved").forEach((el) => {
+            el.textContent = "Saved";
+            setTimeout(() => (el.textContent = ""), 900);
+          });
+        }
+      }
+
+      async function getAllRecordings() {
+        const db = await openAudioDb();
+        return new Promise((resolve, reject) => {
+          const recordings = [];
+          const request = db
+            .transaction(AUDIO_STORE, "readonly")
+            .objectStore(AUDIO_STORE)
+            .openCursor();
+          request.onsuccess = () => {
+            const cursor = request.result;
+            if (!cursor) {
+              resolve(recordings);
+              return;
+            }
+            recordings.push({ key: cursor.key, value: cursor.value });
+            cursor.continue();
+          };
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      async function clearAllRecordings() {
+        const db = await openAudioDb();
+        return new Promise((resolve, reject) => {
+          const request = db
+            .transaction(AUDIO_STORE, "readwrite")
+            .objectStore(AUDIO_STORE)
+            .clear();
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      }
+
+      function blobToDataUrl(blob) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      async function dataUrlToBlob(dataUrl) {
+        const response = await fetch(dataUrl);
+        return response.blob();
+      }
+
+      function songLabel(item, index) {
+        return item.title.trim() || `Untitled song ${index + 1}`;
+      }
+
+      function renderSongSelect() {
+        songSelect.innerHTML = "";
+        library.songs.forEach((item, index) => {
+          const option = document.createElement("option");
+          option.value = item.id;
+          option.textContent = songLabel(item, index);
+          option.selected = item.id === song.id;
+          songSelect.append(option);
+        });
+        document.querySelector("#deleteSongButton").disabled =
+          library.songs.length <= 1;
+      }
+
+      function loadSong(nextSong, revealVideo = true) {
+        stopActiveRecording();
+        song = nextSong;
+        library.activeSongId = song.id;
+        titleInput.value = song.title || "";
+        lyricsInput.value = (song.lines || []).join("\n");
+        youtubeUrlInput.value = song.youtubeUrl || "";
+        youtubePlayer.src = "";
+        floatingPlayer.hidden = true;
+        floatingPlayer.classList.remove("hidden");
+        showPlayerButton.classList.remove("visible");
+        if (song.youtubeUrl) loadYouTubeVideo(song.youtubeUrl, revealVideo);
+        renderSongSelect();
+        render();
+      }
+
+      function getYouTubeId(value) {
+        const input = value.trim();
+        if (/^[\w-]{11}$/.test(input)) return input;
+        try {
+          const url = new URL(input);
+          if (url.hostname === "youtu.be") {
+            return url.pathname.split("/").filter(Boolean)[0] || null;
+          }
+          if (
+            url.hostname.endsWith("youtube.com") ||
+            url.hostname.endsWith("youtube-nocookie.com")
+          ) {
+            if (url.pathname === "/watch") return url.searchParams.get("v");
+            const parts = url.pathname.split("/").filter(Boolean);
+            if (["embed", "shorts", "live"].includes(parts[0])) return parts[1];
+          }
+        } catch {}
+        return null;
+      }
+
+      function loadYouTubeVideo(url, reveal = true) {
+        const videoId = getYouTubeId(url);
+        if (!videoId) return false;
+        youtubePlayer.src = `https://www.youtube-nocookie.com/embed/${encodeURIComponent(
+          videoId,
+        )}?rel=0`;
+        floatingPlayer.hidden = false;
+        if (reveal) {
+          floatingPlayer.classList.remove("hidden");
+          showPlayerButton.classList.remove("visible");
+        }
+        return true;
+      }
+
+      function render() {
+        lineCards.innerHTML = "";
+        if (!song.lines.length) {
+          workspace.classList.remove("visible");
+          return;
+        }
+
+        workspace.classList.add("visible");
+        displayTitle.textContent = song.title.trim() || "My song notes";
+        lineCount.textContent = `${song.lines.length} lyric line${song.lines.length === 1 ? "" : "s"}`;
+
+        song.lines.forEach((line, index) => {
+          const details = document.createElement("details");
+          details.open = true;
+
+          const summary = document.createElement("summary");
+          const number = document.createElement("span");
+          number.className = "number";
+          number.textContent = String(index + 1).padStart(2, "0");
+          const lyric = document.createElement("span");
+          lyric.className = "lyric";
+          lyric.textContent = line;
+          summary.append(number, lyric);
+
+          const wrap = document.createElement("div");
+          wrap.className = "note-wrap";
+          const label = document.createElement("label");
+          label.htmlFor = `note-${index}`;
+          label.textContent = "Your notes";
+          const note = document.createElement("textarea");
+          note.className = "note";
+          note.id = `note-${index}`;
+          note.placeholder =
+            "Meaning, vocabulary, grammar, pronunciation, emotion…";
+          note.value = song.notes[index] || "";
+          const status = document.createElement("div");
+          status.className = "saved";
+
+          const recordingSection = document.createElement("div");
+          recordingSection.className = "recording-section";
+          const recordingHeading = document.createElement("div");
+          recordingHeading.className = "recording-heading";
+          const recordingLabel = document.createElement("strong");
+          recordingLabel.textContent = "Pronunciation / singing recording";
+          const recordingStatus = document.createElement("span");
+          recordingStatus.className = "recording-status";
+          recordingStatus.textContent = "Loading…";
+          const recordingActions = document.createElement("div");
+          recordingActions.className = "recording-actions";
+          recordingHeading.append(recordingLabel, recordingStatus);
+          recordingSection.append(recordingHeading, recordingActions);
+
+          const key = audioKey(index);
+          let audioUrl = null;
+          let currentRecording = null;
+
+          function showRecording(recording) {
+            currentRecording = recording;
+            recordingActions.innerHTML = "";
+            if (audioUrl) URL.revokeObjectURL(audioUrl);
+            audioUrl = null;
+
+            const recordButton = document.createElement("button");
+            recordButton.type = "button";
+            recordButton.textContent = recording
+              ? "Record a new take"
+              : "● Record this line";
+
+            recordButton.addEventListener("click", async () => {
+              if (
+                !navigator.mediaDevices?.getUserMedia ||
+                !window.MediaRecorder
+              ) {
+                recordingStatus.textContent =
+                  "Voice recording is not supported in this browser.";
+                return;
+              }
+              if (activeRecorder) {
+                recordingStatus.textContent =
+                  "Finish the other recording first.";
+                return;
+              }
+
+              try {
+                activeStream = await navigator.mediaDevices.getUserMedia({
+                  audio: true,
+                });
+                const chunks = [];
+                const recorder = new MediaRecorder(activeStream);
+                activeRecorder = recorder;
+                let seconds = 0;
+                recordingActions.innerHTML = "";
+
+                const stopButton = document.createElement("button");
+                stopButton.type = "button";
+                stopButton.className = "recording";
+                stopButton.textContent = "■ Stop recording";
+                stopButton.addEventListener("click", stopActiveRecording);
+                recordingActions.append(stopButton);
+                recordingStatus.className = "recording-status active";
+                recordingStatus.textContent = "Recording 0:00";
+                const timer = setInterval(() => {
+                  seconds += 1;
+                  recordingStatus.textContent = `Recording ${Math.floor(
+                    seconds / 60,
+                  )}:${String(seconds % 60).padStart(2, "0")}`;
+                }, 1000);
+
+                recorder.addEventListener("dataavailable", (event) => {
+                  if (event.data.size) chunks.push(event.data);
+                });
+                recorder.addEventListener("stop", async () => {
+                  clearInterval(timer);
+                  activeStream?.getTracks().forEach((track) => track.stop());
+                  activeStream = null;
+                  activeRecorder = null;
+                  const blob = new Blob(chunks, {
+                    type: recorder.mimeType || "audio/webm",
+                  });
+                  const savedRecording = {
+                    blob,
+                    recordedAt: new Date().toISOString(),
+                    duration: seconds,
+                  };
+                  try {
+                    await putRecording(key, savedRecording);
+                    showRecording(savedRecording);
+                  } catch {
+                    recordingStatus.className = "recording-status";
+                    recordingStatus.textContent = "Could not save this take.";
+                    showRecording(currentRecording);
+                  }
+                });
+                recorder.start();
+              } catch {
+                recordingStatus.className = "recording-status";
+                recordingStatus.textContent =
+                  "Microphone access was not granted.";
+              }
+            });
+            recordingActions.append(recordButton);
+
+            if (!recording) {
+              recordingStatus.className = "recording-status";
+              recordingStatus.textContent = "No take recorded yet";
+              return;
+            }
+
+            audioUrl = URL.createObjectURL(recording.blob);
+            const audio = document.createElement("audio");
+            audio.controls = true;
+            audio.preload = "metadata";
+            audio.src = audioUrl;
+
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.className = "danger";
+            deleteButton.textContent = "Delete take";
+            deleteButton.addEventListener("click", async () => {
+              if (!confirm("Delete this recording? This cannot be undone."))
+                return;
+              await deleteRecording(key);
+              showRecording(null);
+            });
+
+            recordingActions.append(audio, deleteButton);
+            const date = new Date(recording.recordedAt);
+            recordingStatus.className = "recording-status";
+            recordingStatus.textContent = `Saved ${date.toLocaleString()}${
+              recording.duration
+                ? ` · ${Math.floor(recording.duration / 60)}:${String(
+                    recording.duration % 60,
+                  ).padStart(2, "0")}`
+                : ""
+            }`;
+          }
+
+          getRecording(key)
+            .then(showRecording)
+            .catch(() => {
+              recordingStatus.textContent = "Audio storage is unavailable.";
+            });
+
+          note.addEventListener("input", () => {
+            song.notes[index] = note.value;
+            status.textContent = "Saving…";
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => {
+              saveSong();
+              status.textContent = "Saved";
+              setTimeout(() => (status.textContent = ""), 900);
+            }, 350);
+          });
+
+          wrap.append(label, note, status, recordingSection);
+          details.append(summary, wrap);
+          lineCards.append(details);
+        });
+      }
+
+      document.querySelector("#createButton").addEventListener("click", () => {
+        const lines = lyricsInput.value
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter(Boolean);
+
+        if (!lines.length) {
+          lyricsInput.focus();
+          return;
+        }
+
+        const oldNotesByLine = new Map();
+        song.lines.forEach((line, i) => {
+          if (song.notes[i]) oldNotesByLine.set(line, song.notes[i]);
+        });
+
+        song = {
+          title: titleInput.value,
+          lines,
+          notes: lines.map((line) => oldNotesByLine.get(line) || ""),
+          youtubeUrl: youtubeUrlInput.value.trim() || song.youtubeUrl || "",
+        };
+        saveSong();
+        renderSongSelect();
+        render();
+        workspace.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
+      document.querySelector("#expandButton").addEventListener("click", () => {
+        document
+          .querySelectorAll("#lineCards details")
+          .forEach((item) => (item.open = true));
+      });
+
+      document
+        .querySelector("#collapseButton")
+        .addEventListener("click", () => {
+          document
+            .querySelectorAll("#lineCards details")
+            .forEach((item) => (item.open = false));
+        });
+
+      document.querySelector("#clearButton").addEventListener("click", () => {
+        if (!confirm("Clear this song and every note? This cannot be undone."))
+          return;
+        song = { ...blankSong(), id: song.id };
+        titleInput.value = "";
+        lyricsInput.value = "";
+        youtubeUrlInput.value = "";
+        youtubePlayer.src = "";
+        floatingPlayer.hidden = true;
+        showPlayerButton.classList.remove("visible");
+        saveSong();
+        renderSongSelect();
+        render();
+        lyricsInput.focus();
+      });
+
+      songSelect.addEventListener("change", () => {
+        saveSong();
+        const selected = library.songs.find(
+          (item) => item.id === songSelect.value,
+        );
+        if (selected) {
+          loadSong(selected);
+          saveSong();
+        }
+      });
+
+      document.querySelector("#newSongButton").addEventListener("click", () => {
+        saveSong();
+        const newSong = blankSong();
+        library.songs.push(newSong);
+        loadSong(newSong, false);
+        saveSong();
+        titleInput.focus();
+      });
+
+      document
+        .querySelector("#deleteSongButton")
+        .addEventListener("click", () => {
+          if (library.songs.length <= 1) return;
+          const name = song.title.trim() || "this untitled song";
+          if (!confirm(`Delete ${name} and its notes? This cannot be undone.`))
+            return;
+          const index = library.songs.findIndex((item) => item.id === song.id);
+          library.songs = library.songs.filter((item) => item.id !== song.id);
+          const nextSong =
+            library.songs[Math.min(index, library.songs.length - 1)];
+          loadSong(nextSong);
+          saveSong();
+        });
+
+      document
+        .querySelector("#exportButton")
+        .addEventListener("click", async () => {
+          const button = document.querySelector("#exportButton");
+          const originalText = button.textContent;
+          button.disabled = true;
+          button.textContent = "Preparing backup…";
+          try {
+            saveSong();
+            const storedRecordings = await getAllRecordings();
+            const recordings = [];
+            for (const item of storedRecordings) {
+              recordings.push({
+                key: item.key,
+                recordedAt: item.value.recordedAt || null,
+                duration: item.value.duration || 0,
+                audio: await blobToDataUrl(item.value.blob),
+              });
+            }
+            const backup = {
+              format: "japanese-song-notebook-backup",
+              version: 1,
+              exportedAt: new Date().toISOString(),
+              library,
+              recordings,
+            };
+            const blob = new Blob([JSON.stringify(backup)], {
+              type: "application/json",
+            });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            const date = new Date().toISOString().slice(0, 10);
+            link.href = url;
+            link.download = `japanese-song-notebook-${date}.json`;
+            document.body.append(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+            button.textContent = "Backup downloaded";
+          } catch {
+            alert("The backup could not be created. Please try again.");
+            button.textContent = originalText;
+          } finally {
+            button.disabled = false;
+            setTimeout(() => (button.textContent = originalText), 1400);
+          }
+        });
+
+      document.querySelector("#importButton").addEventListener("click", () => {
+        importFile.value = "";
+        importFile.click();
+      });
+
+      importFile.addEventListener("change", async () => {
+        const file = importFile.files?.[0];
+        if (!file) return;
+        const importButton = document.querySelector("#importButton");
+        const originalText = importButton.textContent;
+        importButton.disabled = true;
+        importButton.textContent = "Checking backup…";
+        try {
+          const backup = JSON.parse(await file.text());
+          if (
+            backup.format !== "japanese-song-notebook-backup" ||
+            backup.version !== 1 ||
+            !backup.library ||
+            !Array.isArray(backup.library.songs) ||
+            !backup.library.songs.length ||
+            !Array.isArray(backup.recordings)
+          ) {
+            throw new Error("Invalid backup");
+          }
+          if (
+            !confirm(
+              `Load ${backup.library.songs.length} song${
+                backup.library.songs.length === 1 ? "" : "s"
+              } from this backup? This will replace the songs currently on this device.`,
+            )
+          ) {
+            return;
+          }
+
+          stopActiveRecording();
+          await clearAllRecordings();
+          importButton.textContent = "Loading backup…";
+          for (const item of backup.recordings) {
+            if (typeof item.key !== "string" || typeof item.audio !== "string")
+              continue;
+            await putRecording(item.key, {
+              blob: await dataUrlToBlob(item.audio),
+              recordedAt: item.recordedAt || new Date().toISOString(),
+              duration: Number(item.duration) || 0,
+            });
+          }
+          library = backup.library;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
+          const active =
+            library.songs.find((item) => item.id === library.activeSongId) ||
+            library.songs[0];
+          loadSong(active);
+          saveSong();
+          importButton.textContent = "Backup loaded";
+        } catch {
+          alert("This file is not a valid Japanese Song Notebook backup.");
+          importButton.textContent = originalText;
+        } finally {
+          importButton.disabled = false;
+          importFile.value = "";
+          setTimeout(() => (importButton.textContent = originalText), 1400);
+        }
+      });
+
+      document
+        .querySelector("#loadVideoButton")
+        .addEventListener("click", () => {
+          const url = youtubeUrlInput.value;
+          if (!loadYouTubeVideo(url)) {
+            youtubeUrlInput.setCustomValidity(
+              "Please paste a valid YouTube video URL.",
+            );
+            youtubeUrlInput.reportValidity();
+            return;
+          }
+          youtubeUrlInput.setCustomValidity("");
+          song.youtubeUrl = url.trim();
+          saveSong();
+        });
+
+      youtubeUrlInput.addEventListener("input", () =>
+        youtubeUrlInput.setCustomValidity(""),
+      );
+
+      document
+        .querySelector("#hidePlayerButton")
+        .addEventListener("click", () => {
+          floatingPlayer.classList.add("hidden");
+          showPlayerButton.classList.add("visible");
+        });
+
+      showPlayerButton.addEventListener("click", () => {
+        floatingPlayer.classList.remove("hidden");
+        showPlayerButton.classList.remove("visible");
+      });
+
+      function restoreLibrary() {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) library = JSON.parse(saved);
+          else {
+            const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+            if (legacy) {
+              const oldSong = {
+                ...blankSong(),
+                ...JSON.parse(legacy),
+                legacyAudioKeys: true,
+              };
+              library = { activeSongId: oldSong.id, songs: [oldSong] };
+            }
+          }
+        } catch {
+          library = { activeSongId: "", songs: [] };
+        }
+
+        if (!Array.isArray(library.songs) || !library.songs.length) {
+          const firstSong = blankSong();
+          library = { activeSongId: firstSong.id, songs: [firstSong] };
+        }
+        library.songs = library.songs.map((item) => ({
+          ...blankSong(),
+          ...item,
+          lines: Array.isArray(item.lines) ? item.lines : [],
+          notes: Array.isArray(item.notes) ? item.notes : [],
+        }));
+        const active =
+          library.songs.find((item) => item.id === library.activeSongId) ||
+          library.songs[0];
+        loadSong(active);
+        saveSong();
+      }
+
+      restoreLibrary();
+    </script>
+  </body>
+</html>
