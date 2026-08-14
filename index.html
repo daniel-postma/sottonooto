@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Japanese Song Notebook</title>
+    <title>Sotto Nooto</title>
     <style>
       :root {
         color-scheme: light;
@@ -223,6 +223,10 @@
         display: block;
       }
 
+      .mobile-nav {
+        display: none;
+      }
+
       .actions {
         display: flex;
         flex-wrap: wrap;
@@ -429,43 +433,162 @@
         }
       }
 
-      @media (max-width: 600px) {
+      @media (max-width: 700px) {
+        body {
+          background: #fffaf4;
+          padding-bottom: calc(76px + env(safe-area-inset-bottom));
+        }
         main {
-          width: min(100% - 20px, 920px);
-          padding-top: 26px;
+          width: 100%;
+          padding: 0 0 28px;
         }
-        .workspace-bar {
-          align-items: flex-start;
-          flex-direction: column;
+        header {
+          position: sticky;
+          z-index: 10;
+          top: 0;
+          margin: 0;
+          padding: calc(12px + env(safe-area-inset-top)) 18px 12px;
+          border-bottom: 1px solid var(--line);
+          background: rgba(255, 250, 244, 0.94);
+          backdrop-filter: blur(16px);
         }
-        .note-wrap {
-          padding-left: 20px;
+        h1 {
+          margin: 0;
+          font-size: 1.55rem;
+          letter-spacing: -0.03em;
         }
-        button {
-          flex: 1 1 auto;
+        header p {
+          display: none;
         }
-        .youtube-row {
-          grid-template-columns: 1fr;
+        .panel,
+        .workspace {
+          margin: 0;
+          padding: 18px;
+          border: 0;
+          border-radius: 0;
+          background: transparent;
+          box-shadow: none;
+        }
+        body.mobile-study .panel,
+        body.mobile-edit .workspace {
+          display: none;
+        }
+        body.mobile-study .workspace.visible {
+          display: block;
         }
         .song-library {
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: 1fr auto;
+          gap: 8px;
+          margin-bottom: 16px;
+          padding-bottom: 16px;
         }
         .song-picker {
           grid-column: 1 / -1;
         }
+        #deleteSongButton {
+          flex: 0 0 auto;
+        }
+        .backup-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          margin-bottom: 18px;
+        }
+        #lyricsInput {
+          min-height: 36vh;
+        }
+        .actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+        }
+        #createButton {
+          grid-column: 1 / -1;
+          min-height: 50px;
+        }
+        .workspace-bar {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 4px;
+          margin-bottom: 12px;
+        }
+        #displayTitle {
+          font-size: 1.7rem;
+        }
+        #lineCards {
+          gap: 10px;
+        }
+        details {
+          border-radius: 16px;
+          box-shadow: 0 5px 18px rgba(89, 48, 62, 0.05);
+        }
+        summary {
+          align-items: flex-start;
+          min-height: 62px;
+          padding: 18px 16px;
+        }
+        .lyric {
+          font-size: 1.12rem;
+        }
+        .note-wrap {
+          padding: 0 16px 18px;
+        }
+        .note {
+          min-height: 150px;
+        }
+        button {
+          flex: 1 1 auto;
+          min-height: 44px;
+        }
+        .youtube-row {
+          grid-template-columns: 1fr;
+        }
         .floating-player {
           top: auto;
-          right: 10px;
-          bottom: 10px;
-          width: min(340px, calc(100vw - 20px));
+          right: 0;
+          bottom: calc(68px + env(safe-area-inset-bottom));
+          width: 100%;
+          border-right: 0;
+          border-bottom: 0;
+          border-left: 0;
+          border-radius: 18px 18px 0 0;
         }
         .floating-player.hidden {
           transform: translateY(calc(100% + 18px));
         }
         .show-player {
-          top: auto;
-          right: 10px;
-          bottom: 10px;
+          display: none !important;
+        }
+        .mobile-nav {
+          position: fixed;
+          z-index: 30;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 4px;
+          padding: 7px 10px calc(7px + env(safe-area-inset-bottom));
+          border-top: 1px solid var(--line);
+          background: rgba(255, 250, 244, 0.96);
+          box-shadow: 0 -8px 26px rgba(89, 48, 62, 0.1);
+          backdrop-filter: blur(16px);
+        }
+        .mobile-nav button {
+          min-height: 48px;
+          padding: 7px 6px;
+          border-radius: 14px;
+          color: var(--muted);
+          background: transparent;
+          font-size: 0.78rem;
+        }
+        .mobile-nav button.active {
+          color: var(--accent-dark);
+          background: var(--soft);
+        }
+        .mobile-nav .nav-icon {
+          display: block;
+          margin-bottom: 2px;
+          font-size: 1.15rem;
+          line-height: 1;
         }
       }
     </style>
@@ -473,7 +596,7 @@
   <body>
     <main>
       <header>
-        <h1>歌のノート</h1>
+        <h1>そっとノート</h1>
         <p>Paste a Japanese song, then build your own line-by-line lesson.</p>
       </header>
 
@@ -575,6 +698,18 @@
     <button id="showPlayerButton" class="show-player" type="button">
       Show video
     </button>
+
+    <nav class="mobile-nav" aria-label="Mobile navigation">
+      <button id="mobileEditButton" class="active" type="button">
+        <span class="nav-icon" aria-hidden="true">✎</span>Edit
+      </button>
+      <button id="mobileStudyButton" type="button">
+        <span class="nav-icon" aria-hidden="true">音</span>Study
+      </button>
+      <button id="mobilePlayerButton" type="button">
+        <span class="nav-icon" aria-hidden="true">▶</span>Player
+      </button>
+    </nav>
 
     <script>
       const STORAGE_KEY = "japanese-song-notebook-v2";
@@ -1012,6 +1147,7 @@
         });
 
         song = {
+          id: song.id,
           title: titleInput.value,
           lines,
           notes: lines.map((line) => oldNotesByLine.get(line) || ""),
@@ -1020,7 +1156,12 @@
         saveSong();
         renderSongSelect();
         render();
-        workspace.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (window.matchMedia("(max-width: 700px)").matches) {
+          setMobileView("study");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          workspace.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
       });
 
       document.querySelector("#expandButton").addEventListener("click", () => {
@@ -1232,6 +1373,38 @@
         showPlayerButton.classList.remove("visible");
       });
 
+      const mobileEditButton = document.querySelector("#mobileEditButton");
+      const mobileStudyButton = document.querySelector("#mobileStudyButton");
+      const mobilePlayerButton = document.querySelector("#mobilePlayerButton");
+
+      function setMobileView(view) {
+        document.body.classList.toggle("mobile-edit", view === "edit");
+        document.body.classList.toggle("mobile-study", view === "study");
+        mobileEditButton.classList.toggle("active", view === "edit");
+        mobileStudyButton.classList.toggle("active", view === "study");
+        if (view !== "player") mobilePlayerButton.classList.remove("active");
+      }
+
+      mobileEditButton.addEventListener("click", () => {
+        setMobileView("edit");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      mobileStudyButton.addEventListener("click", () => {
+        setMobileView("study");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      mobilePlayerButton.addEventListener("click", () => {
+        if (!song.youtubeUrl || floatingPlayer.hidden) {
+          setMobileView("edit");
+          youtubeUrlInput.focus();
+          return;
+        }
+        const isHidden = floatingPlayer.classList.toggle("hidden");
+        mobilePlayerButton.classList.toggle("active", !isHidden);
+      });
+
       function restoreLibrary() {
         try {
           const saved = localStorage.getItem(STORAGE_KEY);
@@ -1269,6 +1442,7 @@
       }
 
       restoreLibrary();
+      setMobileView(song.lines.length ? "study" : "edit");
     </script>
   </body>
 </html>
